@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delhi Metro Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .link {
+            stroke-opacity: 0.6;
+            stroke-width: 4px;
+        }
+        .node {
+            fill: #1f77b4;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        text {
+            font-size: 12px;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+    <svg width="800" height="600"></svg>
+    <script>
+        const metroData = {
+            nodes: [
+                {id: "Shastri Park"},{id:"Tis Hazari"},{id:"Shastri Nagar"},
+                { id: "Rajiv Chowk" }, { id: "New Delhi" }, { id: "Kashmere Gate" }, { id: "Central Secretariat" }, { id: "Akshardham" }, { id: "Yamuna Bank" },
+                { id: "Hauz Khas" }, { id: "Botanical Garden" }, { id: "Chandni Chowk" }, { id: "Chawri Bazaar" }, { id: "Dwarka" }, { id: "Golf Course" },
+                { id: "Sector-34 Noida" }, { id: "Sector-52 Noida" }, { id: "Sector-61 Noida" }, { id: "Sector-59 Noida" }, { id: "Sector-62 Noida" },
+                {id: "Barakhamba Road"},{id: "Mandi House"},{id: "Supreme Court"},{id: "Indraprastha"},
+                { id: "Noida City Centre" }, { id: "Noida Electronic City" },{id: "Shivaji Stadium"},{id:"Dhaula Kuan"},{id:"Aerocity"},{id: 'Airport T-3'}
+            ],
+            links: [
+                {source: "Kashmere Gate",target: "Tis Hazari",color:"red"},
+                {source:"Tis Hazari",target:"Shastri Nagar",color:"red"},
+                {source:"Shastri Park",target:"Kashmere Gate",color:"red"},
+                { source: "Rajiv Chowk", target: "New Delhi", color: "yellow" },
+                { source: "New Delhi", target: "Kashmere Gate", color: "yellow" },
+                { source: "Rajiv Chowk", target: "Central Secretariat", color: "yellow" },
+                {source: "Rajiv Chowk",target:"Akshardham",color: "blue"},
+                //{source: "Barakhamba Road",target: "Mandi House",color:"blue"},
+                //{source: "Mandi House",target:"Supreme Court",color:"blue"},
+                //{source:  "Mandi House",target:"Akshardham",color:"blue"},
+                //{ source: "Indraprastha", target: "Yamuna Bank", color: "blue" },
+                { source: "Yamuna Bank", target: "Akshardham", color: "blue" },
+                { source: "Akshardham", target: "Botanical Garden", color: "blue" },
+                { source: "Botanical Garden", target: "Noida City Centre", color: "blue" },
+                { source: "Central Secretariat", target: "Hauz Khas", color: "yellow" },
+                { source: "Hauz Khas", target: "Dwarka", color: "yellow" },
+                { source: "New Delhi", target: "Shivaji Stadium", color: "orange" },
+                { source: "Shivaji Stadium", target: "Aerocity", color: "orange" },
+                //{ source: "Dhaula Kuan", target: "Aerocity", color: "orange" },
+                { source: "Aerocity", target:"Airport T-3",color: "orange"},
+                { source: "Chandni Chowk", target: "Chawri Bazaar", color: "yellow" },
+                //{ source: "Golf Course", target: "Noida City Centre", color: "aqua" },
+                { source: "Noida City Centre", target: "Sector-62 Noida", color: "aqua" },
+                { source: "Sector-62 Noida", target: "Noida Electronic City", color: "aqua" }
+            ]
+        };
+
+        const width = 800, height = 600;
+        const svg = d3.select("svg");
+
+        const simulation = d3.forceSimulation(metroData.nodes)
+            .force("link", d3.forceLink(metroData.links).id(d => d.id))
+            .force("charge", d3.forceManyBody().strength(-200))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(metroData.links)
+            .enter().append("line")
+            
+            .attr("class", "link")
+            .attr("stroke", d => d.color)
+            .on("click",(event,d)=> console.log(`Line: ${d.color}`));
+
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(metroData.nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 8)
+            .on("click",(event,d)=> console.log(`Station: ${d.id}`))
+            .call(drag(simulation));
+
+        const text = svg.append("g")
+            .selectAll("text")
+            .data(metroData.nodes)
+            .enter().append("text")
+            .text(d => d.id)
+            .attr("dy", -10);
+
+        simulation.on("tick", () => {
+            link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+            node.attr("cx", d => d.x).attr("cy", d => d.y);
+            text.attr("x", d => d.x).attr("y", d => d.y);
+        });
+
+        function drag(simulation) {
+            return d3.drag()
+                .on("start", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                })
+                .on("drag", (event, d) => {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                })
+                .on("end", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                });
+        }
+    </script>
+</body>
+</html>
